@@ -104,7 +104,7 @@ if (submitButton) {
     console.log("Submit button clicked");
     e.preventDefault();
     e.stopPropagation();
-    saveNote();
+    handleSubmit();
   });
 }
 
@@ -129,7 +129,7 @@ document.addEventListener("keydown", function(event) {
       console.log("Enter key pressed - saving note");
       event.preventDefault();
       event.stopPropagation();
-      saveNote();
+      handleSubmit();
       return false;
     }
   } 
@@ -256,6 +256,13 @@ function saveNote() {
   // Get content from Quill as HTML - includes rich text formatting
   const content = quill.root.innerHTML.trim();
   
+  // Check if content is empty (only whitespace, newlines, empty paragraphs)
+  if (isContentEmpty(content) && !mediaData) {
+    console.log("Content is empty, closing without saving");
+    ipcRenderer.send("hide-sticky-note");
+    return;
+  }
+  
   if (content || mediaData) {
     console.log("Attempting to save note");
     
@@ -349,4 +356,189 @@ ipcRenderer.on("ensure-visible", () => {
     quill.setText('');
   }
 });
+
+// Listen for show-note event from the main process
+ipcRenderer.on("show-note", (event, data) => {
+  console.log("Show note event received", data);
+  
+  // Main process has already positioned the window, but we might need to make fine adjustments
+  // based on actual rendered content size, which the main process doesn't know about
+  
+  // The mousePosition and adjustedPosition are provided in the data
+  // If needed, we can use them to send back further adjustments
+  if (data && (data.mousePosition || data.adjustedPosition)) {
+    // If we're already at an adjusted position from main process,
+    // we might not need to position again, but we can fine-tune if needed
+    const needsFurtherAdjustment = checkIfNeedsFurtherAdjustment(data);
+    
+    if (needsFurtherAdjustment) {
+      positionStickyNoteAtMouse(data.mousePosition, data.adjustedPosition, data.displayBounds);
+    }
+  } else {
+    console.warn("No position data in show-note event");
+  }
+  
+  // Show the container
+  const container = document.querySelector(".sticky-note-container");
+  container.style.opacity = "1";
+  
+  // Focus on the editor after a short delay to ensure the DOM is ready
+  setTimeout(() => {
+    if (quill) {
+      quill.focus();
+    }
+  }, 10);
+});
+
+// Check if the window needs further adjustment based on content size
+function checkIfNeedsFurtherAdjustment(data) {
+  // For now, we'll trust the main process positioning
+  // This function could be expanded if there are specific cases
+  // where content size affects positioning needs
+  return false;
+}
+
+// Function to position the sticky note at mouse position
+function positionStickyNoteAtMouse(mousePosition, existingAdjustedPosition, displayBounds) {
+  if (!mousePosition) {
+    console.error("No mouse position data provided");
+    return;
+  }
+  
+  console.log("Fine-tuning position:", { mousePosition, existingAdjustedPosition, displayBounds });
+  
+  // If we already have an adjusted position from the main process, use that as a base
+  if (existingAdjustedPosition) {
+    // Apply any necessary fine-tuning here
+    // For example, adjusting based on actual rendered content height
+    
+    // For now, we'll just use the position provided by the main process
+    // We don't need to send another set-note-position message
+    return;
+  }
+  
+  // If we don't have an adjusted position, calculate it ourselves
+  // This is a fallback in case the main process didn't provide an adjusted position
+  
+  // Get the window dimensions
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+  
+  // Get screen dimensions using screen API for more accurate bounds checking
+  const screenWidth = window.screen.availWidth;
+  const screenHeight = window.screen.availHeight;
+  
+  // Calculate initial position (centered at mouse)
+  let x = mousePosition.x - (windowWidth / 2);
+  let y = mousePosition.y - 40; // Offset from cursor to prevent immediate overlap
+  
+  // If we have display bounds from the main process, use those for boundary checking
+  let minX = 0;
+  let minY = 0;
+  let maxX = screenWidth - windowWidth;
+  let maxY = screenHeight - windowHeight;
+  
+  if (displayBounds) {
+    minX = displayBounds.x;
+    minY = displayBounds.y;
+    maxX = displayBounds.x + displayBounds.width - windowWidth;
+    maxY = displayBounds.y + displayBounds.height - windowHeight;
+  }
+  
+  // Adjust position to ensure the note stays within screen boundaries
+  const adjustedX = Math.max(minX, Math.min(x, maxX));
+  const adjustedY = Math.max(minY, Math.min(y, maxY));
+  
+  console.log("Calculated adjusted position:", { 
+    original: { x, y }, 
+    adjusted: { x: adjustedX, y: adjustedY },
+    bounds: { minX, minY, maxX, maxY }
+  });
+  
+  // Send position to main process using absolute screen coordinates
+  ipcRenderer.send("set-note-position", { 
+    x: adjustedX,
+    y: adjustedY
+  });
+}
+
+// Function to check if content is empty (only whitespace/newlines)
+function isContentEmpty(content) {
+  if (!content) return true;
+  
+  // For plain text, check if it's just whitespace
+  if (typeof content === 'string') {
+    // Check for HTML content that's just empty paragraphs
+    if (content.includes('<p>')) {
+      // Create temp div to parse HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = content;
+      
+      // Get text content without HTML
+      const textOnly = tempDiv.textContent || tempDiv.innerText;
+      return !textOnly || textOnly.trim() === '';
+    }
+    
+    return content.trim() === '';
+  }
+  
+  // For rich text editor
+  if (quill) {
+    // Get text content without HTML
+    const textOnly = quill.getText().trim();
+    if (textOnly === '') return true;
+    
+    // Check if there's only default blank line content
+    const delta = quill.getContents();
+    if (delta.ops.length === 1 && delta.ops[0].insert === '\n') {
+      return true;
+    }
+    
+    // Check for empty paragraph structure
+    const html = quill.root.innerHTML;
+    if (html === '<p><br></p>' || html === '<p></p>') {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+// Unified submit handler
+function handleSubmit() {
+  let content = '';
+  let type = 'text';
+  
+  // Check what type of content we have
+  if (quill) {
+    type = 'rich-text';
+    content = document.querySelector(".ql-editor").innerHTML;
+  } else if (document.querySelector("textarea")) {
+    type = 'text';
+    content = document.querySelector("textarea").value;
+  } else if (mediaPreview.innerHTML !== '') {
+    type = 'media';
+    content = mediaPreview.querySelector('img, video, audio').src;
+  }
+  
+  // Validate content is not empty
+  if (isContentEmpty(content) && !mediaData) {
+    console.log("Content is empty, closing without saving");
+    // Just hide the note without saving empty content
+    ipcRenderer.send("hide-sticky-note");
+    
+    // Reset the editor/textarea content
+    if (quill) {
+      quill.setContents([]);
+    } else if (document.querySelector("textarea")) {
+      document.querySelector("textarea").value = '';
+    }
+    
+    return;
+  }
+  
+  // Content is not empty, proceed with saving
+  console.log("Content validated, saving note");
+  saveNote();
+}
 

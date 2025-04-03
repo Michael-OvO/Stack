@@ -2,8 +2,8 @@ const { app, BrowserWindow, ipcMain, globalShortcut, screen } = require("electro
 const path = require("path")
 const os = require("os")
 
-let stickyNote
-let stackWindow
+let stickyNote = null
+let stackWindow = null
 let statusWindow
 
 // iOS system colors
@@ -12,6 +12,16 @@ const colors = {
   success: "#34C759", // iOS green
   background: "rgba(250, 250, 250, 0.9)",
   text: "#000000",
+}
+
+// Capture mouse position when showing the note
+let lastMousePosition = { x: 0, y: 0 }
+
+// Track mouse position globally
+function trackMousePosition() {
+  screen.on('mouse-move', (_, mousePosition) => {
+    lastMousePosition = mousePosition
+  })
 }
 
 function createStickyNote() {
@@ -302,31 +312,17 @@ app.whenReady().then(() => {
     stickyNote.hide()
   }
 
+  // Start tracking mouse position
+  trackMousePosition()
+
   // Register global shortcut for showing sticky note
   globalShortcut.register("CommandOrControl+Enter", () => {
-    // Don't toggle visibility during save animation
-    if (stickyNote.savingInProgress) {
-      console.log("Save in progress, ignoring shortcut");
-      return;
-    }
-    
-    if (stickyNote.isVisible()) {
-      stickyNote.hide()
+    // Check if the note is visible - if yes, hide it
+    if (stickyNote && stickyNote.isVisible()) {
+      hideStickyNote()
     } else {
-      // Center the sticky note on the screen
-      const { width, height } = screen.getPrimaryDisplay().workAreaSize
-      const [stickyWidth, stickyHeight] = stickyNote.getSize()
-      stickyNote.setPosition(Math.floor(width / 2 - stickyWidth / 2), Math.floor(height / 2 - stickyHeight / 2))
-
-      // Show the note - CSS animation will handle the transition
-      stickyNote.setOpacity(1)
-      stickyNote.show()
-      stickyNote.focus()
-      
-      // Tell the sticky note to focus the editor after it's shown
-      setTimeout(() => {
-        stickyNote.webContents.send("focus-editor");
-      }, 50);
+      // Show the note at the current mouse position
+      showStickyNote()
     }
   })
 
@@ -393,9 +389,15 @@ ipcMain.on("add-to-stack", (event, data) => {
   }, 350) // Reduced from 600ms for faster completion
 })
 
+// Handle ready event from renderer
 ipcMain.on("hide-sticky-note", () => {
-  stickyNote.hide()
-})
+  hideStickyNote();
+});
+
+// Legacy event handler for compatibility
+ipcMain.on("hide-note", () => {
+  hideStickyNote();
+});
 
 // New handler to ensure sticky note stays hidden during save animation
 ipcMain.on("prepare-to-hide-sticky", () => {
@@ -459,6 +461,82 @@ ipcMain.on("sticky-note-ready", () => {
   console.log("Sticky note ready, ensuring it's hidden");
   if (stickyNote) {
     stickyNote.hide();
+  }
+});
+
+// Handle showing the sticky note with mouse position
+function showStickyNote() {
+  // If the sticky note doesn't exist, create it
+  if (!stickyNote) {
+    createStickyNote();
+  }
+
+  // Get current mouse position from the screen
+  const cursorPosition = screen.getCursorScreenPoint();
+  
+  // Get display where the cursor is
+  const displayForCursor = screen.getDisplayNearestPoint(cursorPosition);
+  const displayBounds = displayForCursor.workArea;
+  
+  // Use actual cursor position from screen API
+  const mousePosition = {
+    x: cursorPosition.x,
+    y: cursorPosition.y
+  };
+  
+  // Window dimensions
+  const windowWidth = 320;
+  const windowHeight = 280;
+  
+  // Calculate initial position (centered on mouse)
+  let x = mousePosition.x - (windowWidth / 2);
+  let y = mousePosition.y - 50;
+  
+  // Boundary check to keep window fully visible on current display
+  x = Math.max(displayBounds.x, Math.min(x, displayBounds.x + displayBounds.width - windowWidth));
+  y = Math.max(displayBounds.y, Math.min(y, displayBounds.y + displayBounds.height - windowHeight));
+  
+  // Create the window at the adjusted position
+  stickyNote.setBounds({
+    x: x,
+    y: y,
+    width: windowWidth,
+    height: windowHeight
+  });
+  
+  // Show the window and ensure it's on top
+  stickyNote.show();
+  stickyNote.setAlwaysOnTop(true, 'pop-up-menu');
+  
+  // Pass the mouse position to the renderer for fine adjustments if needed
+  stickyNote.webContents.send("show-note", { 
+    mousePosition,
+    adjustedPosition: { x, y },
+    displayBounds
+  });
+  
+  console.log("Opening sticky note at:", { 
+    original: mousePosition,
+    adjusted: { x, y },
+    displayBounds
+  });
+}
+
+// Handle hiding the sticky note
+function hideStickyNote() {
+  stickyNote.hide();
+}
+
+// Handle setting the sticky note position based on mouse coordinates
+ipcMain.on("set-note-position", (event, position) => {
+  if (stickyNote) {
+    const bounds = stickyNote.getBounds();
+    stickyNote.setBounds({
+      x: position.x,
+      y: position.y,
+      width: bounds.width,
+      height: bounds.height
+    });
   }
 });
 

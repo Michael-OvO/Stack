@@ -375,13 +375,34 @@ function updateStatusContent(task) {
   if (task) {
     let content = ''
     if (task.type === 'text') {
-      // Truncate long text for better display
-      content = task.content.length > 120 
-        ? task.content.substring(0, 120) + '...' 
-        : task.content
-    } else if (task.type === 'rich-text') {
-      // For rich text in status, preserve the HTML formatting
+      // Keep full text but add proper wrapping
       content = task.content
+    } else if (task.type === 'rich-text') {
+      // For rich text, strip excessive HTML but preserve basic formatting
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = task.content
+      
+      // Remove any large images or complex elements that might cause layout issues
+      const images = tempDiv.querySelectorAll('img')
+      if (images.length > 0) {
+        images.forEach(img => {
+          const imgPlaceholder = document.createElement('span')
+          imgPlaceholder.className = 'media-placeholder'
+          imgPlaceholder.textContent = '[Image]'
+          img.parentNode.replaceChild(imgPlaceholder, img)
+        })
+      }
+      
+      // Remove any deeply nested elements or complex structures
+      const deepElements = tempDiv.querySelectorAll('iframe, video, audio, canvas, object, embed')
+      deepElements.forEach(el => {
+        const placeholder = document.createElement('span')
+        placeholder.className = 'media-placeholder'
+        placeholder.textContent = `[${el.tagName.toLowerCase()}]`
+        el.parentNode.replaceChild(placeholder, el)
+      })
+      
+      content = tempDiv.innerHTML
     } else {
       content = 'Media attachment'
     }
