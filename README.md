@@ -2,45 +2,6 @@
 
 A modern, sleek sticky note application built with Electron that provides a seamless way to create, manage, and organize notes with a beautiful iOS-inspired design. Perfect for quick reminders, task tracking, and capturing ideas without interrupting your workflow.
 
-## ✨ Features
-
-- **Rich Text Editing**: Create notes with extensive formatting options
-  - Text styling (bold, italic, underline, strikethrough)
-  - Multiple heading levels
-  - Ordered and unordered lists
-  - Code blocks with syntax highlighting
-  - Blockquotes and indentation
-  - Text alignment and color options
-
-- **Media Support**: 
-  - Attach images (drag & drop or paste from clipboard)
-  - Embed videos and audio files
-  - Support for file attachments
-
-- **Seamless Organization**:
-  - Notes are organized in a collapsible stack that stays out of your way
-  - Categorize notes with tags and colors
-  - Search functionality to quickly find specific notes
-  - Pin important notes to the top
-
-- **Accessibility & Performance**:
-  - Global shortcut (Ctrl+Enter or Cmd+Enter) for instant access
-  - Lightweight and fast with minimal memory usage
-  - Dark mode support that follows system preferences
-  - Fully keyboard navigable
-
-- **Beautiful Design**:
-  - iOS-inspired interface with smooth animations
-  - Custom transitions when showing/hiding notes
-  - Responsive layout that works on any screen size
-  - Customizable appearance settings
-
-- **Productivity Features**:
-  - Active Task Tracking to maintain focus
-  - Automatic saving to prevent data loss
-  - Import/export functionality for backup
-  - Desktop notifications for reminders
-
 ## 🚀 Installation
 
 ### Prerequisites
