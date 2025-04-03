@@ -1,0 +1,957 @@
+/* Unified CSS for Stack and Sticky Note */
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-regular-webfont.woff");
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-medium-webfont.woff");
+  font-weight: 500;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("https://applesocial.s3.amazonaws.com/assets/styles/fonts/sanfrancisco/sanfranciscodisplay-semibold-webfont.woff");
+  font-weight: 600;
+}
+
+:root {
+  --target-x: 100vw;
+  --target-y: 0;
+  --ios-bg: rgba(250, 250, 250, 0.9);
+  --ios-blue: #007aff;
+  --ios-green: #34c759;
+  --ios-gray: #8e8e93;
+  --ios-light-gray: #e5e5ea;
+  --ios-lighter-gray: rgba(60, 60, 67, 0.18);
+  --ios-border-radius: 13px;
+  --ios-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.1);
+  --ios-transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--ios-border-radius);
+  background-color: transparent !important;
+}
+
+body {
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background-color: transparent !important;
+  color: #000000;
+  -webkit-app-region: no-drag;
+  letter-spacing: -0.01em;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+  /* Ensure rounded corners work properly */
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  transform: translateZ(0);
+}
+
+/* Shared button styles */
+.button {
+  background: var(--ios-blue);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--ios-transition);
+  -webkit-app-region: no-drag;
+}
+
+.button:hover {
+  background: #0071e3;
+  transform: scale(1.05);
+}
+
+.button:active {
+  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+.button:disabled {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.3);
+  cursor: not-allowed;
+}
+
+/* Window handle like in iOS sheets */
+.window-handle {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 5px;
+  background-color: rgba(60, 60, 67, 0.3);
+  border-radius: 2.5px;
+  z-index: 3;
+}
+
+/* Add a larger draggable area at the top */
+.drag-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  -webkit-app-region: drag;
+  z-index: 2;
+}
+
+/* Make sure the body is not draggable by default */
+body {
+  -webkit-app-region: no-drag;
+}
+
+/* Ensure the sticky note container is not draggable */
+.sticky-note-container {
+  -webkit-app-region: no-drag;
+  padding-top: 40px; /* Increased to make room for drag area */
+}
+
+/* Sticky Note specific styles */
+.sticky-note-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  height: calc(100% - 32px);
+  box-sizing: border-box;
+  -webkit-app-region: no-drag;
+  overflow: hidden;
+  background-color: rgba(250, 250, 250, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--ios-border-radius);
+  box-shadow: var(--ios-shadow);
+}
+
+/* Rich Text Editor Styles */
+#editor-container {
+  width: 100%;
+  height: auto;
+  min-height: 120px;
+  flex-grow: 1;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--ios-border-radius);
+  color: #000000;
+  transition: var(--ios-transition);
+  -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: var(--ios-shadow);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: var(--ios-border-radius) var(--ios-border-radius) 0 0;
+  background: rgba(245, 245, 247, 0.9);
+  padding: 6px 8px !important;
+  box-sizing: border-box;
+}
+
+.ql-container.ql-snow {
+  border: none !important;
+  flex-grow: 1;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.ql-editor {
+  padding: 12px 14px !important;
+  min-height: 80px;
+  max-height: 150px;
+  font-size: 14px;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+.ql-editor:focus {
+  outline: none;
+}
+
+.ql-editor p {
+  margin-bottom: 0.5em;
+}
+
+/* Make toolbar buttons more iOS-like */
+.ql-formats button {
+  width: 28px !important;
+  height: 28px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-right: 3px !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease;
+}
+
+.ql-formats button:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+.ql-formats button.ql-active {
+  background-color: rgba(0, 122, 255, 0.15) !important;
+}
+
+.ql-formats button.ql-active .ql-stroke {
+  stroke: var(--ios-blue) !important;
+}
+
+.ql-formats button.ql-active .ql-fill {
+  fill: var(--ios-blue) !important;
+}
+
+/* iOS style for dropdown menus */
+.ql-picker-options {
+  border-radius: 10px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  border: none !important;
+  padding: 5px 0 !important;
+}
+
+.ql-picker-item {
+  padding: 5px 10px !important;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.ql-picker-item:hover {
+  background-color: rgba(0, 122, 255, 0.1) !important;
+  color: var(--ios-blue) !important;
+}
+
+textarea {
+  width: 100%;
+  height: auto;
+  min-height: 120px;
+  flex-grow: 1;
+  resize: none;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--ios-border-radius);
+  padding: 12px 14px;
+  color: #000000;
+  font-size: 14px;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.4;
+  transition: var(--ios-transition);
+  -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: -0.01em;
+  box-shadow: var(--ios-shadow);
+  margin: 0;
+}
+
+textarea:focus {
+  outline: none;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+textarea::placeholder {
+  color: var(--ios-gray);
+  opacity: 0.6;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* iOS-style selection */
+::selection {
+  background: rgba(0, 122, 255, 0.2);
+}
+::-moz-selection {
+  background: rgba(0, 122, 255, 0.2);
+}
+
+.input-container {
+  display: flex;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+  margin-top: 10px;
+  flex-shrink: 0;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+/* File label styling to match pop-button in stack */
+.file-label {
+  background: var(--ios-blue);
+  color: white;
+  border-radius: 14px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--ios-transition);
+  -webkit-user-select: none;
+  text-align: center;
+  display: inline-block;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.file-label:hover {
+  background: #0071e3;
+  transform: scale(1.05);
+}
+
+.file-label:active {
+  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+#media-preview {
+  max-width: 100%;
+  max-height: 120px;
+  margin-top: 10px;
+  border-radius: var(--ios-border-radius);
+  overflow: hidden;
+  z-index: 1;
+  position: relative;
+  box-shadow: var(--ios-shadow);
+  transition: var(--ios-transition);
+  flex-shrink: 0;
+}
+
+#media-preview img,
+#media-preview video {
+  width: 100%;
+  height: auto;
+  border-radius: var(--ios-border-radius);
+  object-fit: cover;
+}
+
+/* Rich Text Content in Stack Notes */
+.rich-text-content {
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.rich-text-content h1 {
+  font-size: 1.4em;
+  margin: 0.4em 0;
+  font-weight: 600;
+}
+
+.rich-text-content h2 {
+  font-size: 1.2em;
+  margin: 0.3em 0;
+  font-weight: 600;
+}
+
+.rich-text-content p {
+  margin: 0.2em 0;
+}
+
+.rich-text-content blockquote {
+  border-left: 3px solid #ccc;
+  margin: 0.5em 0;
+  padding-left: 0.8em;
+  color: #555;
+}
+
+.rich-text-content pre.ql-syntax,
+.rich-text-content .ql-code-block-container {
+  background-color: #f5f5f5;
+  border-radius: 3px;
+  padding: 0.3em 0.5em;
+  font-family: monospace;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: #333;
+  font-size: 0.9em;
+}
+
+.rich-text-content ul, 
+.rich-text-content ol {
+  padding-left: 1.5em;
+  margin: 0.2em 0;
+}
+
+.rich-text-content strong {
+  font-weight: 600;
+}
+
+.rich-text-content em {
+  font-style: italic;
+}
+
+.rich-text-content u {
+  text-decoration: underline;
+}
+
+.rich-text-content s {
+  text-decoration: line-through;
+}
+
+/* Limit height for rich text content in stack notes */
+.truncated-rich-text {
+  max-height: 70px;
+  overflow: hidden;
+  position: relative;
+}
+
+.truncated-rich-text::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.8));
+  pointer-events: none;
+}
+
+.formatted-preview {
+  font-size: 0.95em;
+}
+
+/* Submit button styling */
+.submit-button {
+  background: var(--ios-green);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--ios-transition);
+  -webkit-app-region: no-drag;
+  white-space: nowrap;
+}
+
+.submit-button:hover {
+  background: #2cb04c;
+  transform: scale(1.05);
+}
+
+.submit-button:active {
+  opacity: 0.7;
+  transform: scale(0.97);
+}
+
+.status-hint {
+  font-size: 12px;
+  color: var(--ios-gray);
+  text-align: center;
+  padding: 6px 0;
+  margin-top: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Animations */
+@keyframes slideToStack {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(calc(var(--target-x) * 0.6), calc(var(--target-y) * 0.6)) scale(0.7);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--target-x), var(--target-y)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sliding {
+  animation: slideToStack 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+  background-color: transparent !important;
+}
+
+.sliding .sticky-note-container {
+  will-change: transform, opacity;
+}
+
+/* Stack-specific styles */
+.stack-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  height: calc(100% - 24px);
+  width: calc(100% - 44px);
+  box-sizing: border-box;
+  opacity: 0; /* Start hidden by default */
+  transition: opacity 0.3s ease;
+  margin-left: 20px;
+  -webkit-app-region: no-drag;
+  z-index: 100;
+  overflow-x: hidden;
+  background-color: transparent !important;
+  pointer-events: none; /* No interaction when hidden */
+}
+
+/* Stack wrapper itself */
+.stack-wrapper {
+  position: fixed !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 44px !important; /* Start collapsed by default */
+  height: 400px;
+  background-color: rgba(250, 250, 250, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px 0 0 16px;
+  box-shadow: var(--ios-shadow);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: var(--ios-transition);
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+  will-change: width;
+  z-index: 9999;
+  transform-origin: right center;
+  box-sizing: border-box;
+}
+
+/* States: hover or expanded class */
+.stack-wrapper.expanded {
+  width: min(300px, 90vw) !important;
+  background-color: rgba(250, 250, 250, 0.9);
+}
+
+.stack-wrapper.expanded .stack-container {
+  opacity: 1 !important;
+  pointer-events: auto !important; /* Enable interaction when visible */
+}
+
+/* Add hover state to make it more responsive in case JS doesn't trigger fast enough */
+.stack-wrapper:hover {
+  width: min(300px, 90vw) !important;
+  background-color: rgba(250, 250, 250, 0.9);
+}
+
+.stack-wrapper:hover .stack-container {
+  opacity: 1 !important;
+}
+
+.stack-icon {
+  position: absolute;
+  left: 15px;
+  top: 20px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  z-index: 2;
+}
+
+.stack-icon-line {
+  width: 100%;
+  height: 2px;
+  background: var(--ios-blue);
+  border-radius: 1px;
+  transition: var(--ios-transition);
+}
+
+/* Change icon to X when expanded */
+.stack-wrapper.expanded .stack-icon-line:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.stack-wrapper.expanded .stack-icon-line:nth-child(2) {
+  opacity: 0;
+}
+
+.stack-wrapper.expanded .stack-icon-line:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.note {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: var(--ios-border-radius);
+  padding: 12px 14px;
+  box-shadow: var(--ios-shadow);
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+  transition: var(--ios-transition);
+  animation: slideIn 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  -webkit-app-region: no-drag;
+  display: block;
+  margin-bottom: 10px;
+  max-height: 150px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.note.expanded {
+  max-height: 500px;
+  transition: max-height 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.note:hover {
+  transform: scale(1.01);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.note-content {
+  color: #000000;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 400;
+  word-wrap: break-word;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expand-note-btn {
+  font-size: 12px;
+  color: var(--ios-blue);
+  margin-top: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  font-weight: 500;
+  text-align: center;
+  position: relative;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 8px;
+}
+
+.expand-note-btn:hover {
+  color: #0057b8;
+}
+
+.note img,
+.note video {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.note audio {
+  width: 100%;
+  margin-top: 8px;
+  border-radius: 8px;
+}
+
+.stack-header {
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  text-align: center;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-count {
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--ios-blue);
+  border-radius: 10px;
+  padding: 1px 7px 2px;
+  font-size: 12px;
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+.pop-button {
+  background: var(--ios-blue) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 14px !important;
+  padding: 4px 10px !important;
+  font-size: 13px !important;
+  font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: var(--ios-transition) !important;
+}
+
+.pop-button:hover {
+  background: #0071e3 !important;
+  transform: scale(1.05) !important;
+}
+
+.pop-button:active {
+  opacity: 0.8 !important;
+  transform: scale(0.97) !important;
+}
+
+.pop-button:disabled {
+  background: rgba(0, 0, 0, 0.1) !important;
+  color: rgba(0, 0, 0, 0.3) !important;
+  cursor: not-allowed !important;
+}
+
+/* Special styling for Clear button (when there's an active task but no notes) */
+.pop-button.clear-button {
+  background: var(--ios-green) !important;
+}
+
+.pop-button.clear-button:hover {
+  background: #2cb04c !important;
+}
+
+.hidden-notes-count {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  margin-top: 5px;
+  padding: 4px;
+  font-weight: 400;
+}
+
+/* Status window for popped task - moved to top */
+.status-window {
+  position: relative;
+  background: rgba(250, 250, 250, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 10px 16px;
+  width: calc(100% - 36px);
+  box-shadow: var(--ios-shadow);
+  border: 0.5px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  z-index: 100;
+  margin-bottom: 10px;
+  min-height: 28px;
+  -webkit-app-region: no-drag;
+  order: -1; /* This moves it to the top of the flex container */
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 10px;
+  position: relative;
+  background: rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease;
+}
+
+.status-indicator.active {
+  background: var(--ios-green);
+}
+
+.status-indicator.active::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: rgba(52, 199, 89, 0.2);
+  border-radius: 50%;
+  top: -4px;
+  left: -4px;
+  animation: pulse 1.5s infinite cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Animation for clearing the status indicator */
+.status-indicator.clearing {
+  animation: flash 0.3s ease;
+}
+
+@keyframes flash {
+  0% {
+    transform: scale(1);
+    background: var(--ios-green);
+  }
+  50% {
+    transform: scale(1.2);
+    background: var(--ios-blue);
+  }
+  100% {
+    transform: scale(1);
+    background: rgba(0, 0, 0, 0.2);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.status-text {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #000000;
+}
+
+.empty-status {
+  color: rgba(0, 0, 0, 0.5);
+  font-style: normal;
+  font-weight: 400;
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.note.removing {
+  animation: slideOut 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+}
+
+/* Custom styles for notes container */
+.notes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  height: auto;
+  flex-grow: 1;
+  overflow-y: auto;
+  position: relative;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  background-color: transparent;
+}
+
+/* Hidden tasks message styling */
+.hidden-tasks-message {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  margin: 0 0 15px 0;
+  padding: 8px;
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+  width: calc(100% - 16px);
+  position: relative;
+  align-self: center;
+}
+
+/* Arrow indicator for hidden tasks - pointing downward */
+.hidden-tasks-message::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Hide the separate hidden notes info since we moved it into the container */
+#hidden-notes-info {
+  display: none !important;
+}
+
+/* iOS-style scrollbar */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 4px 0;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+/* Hide scrollbar when not scrolling - iOS style */
+*:not(:hover)::-webkit-scrollbar-thumb {
+  visibility: hidden;
+}
+
+/* Remove the close button styles */
+.close-button,
+.close-button::before,
+.close-button::after {
+  display: none;
+}
+

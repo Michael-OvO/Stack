@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stack</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="stack-wrapper" id="stack-wrapper">
+    <div class="stack-icon">
+      <div class="stack-icon-line"></div>
+      <div class="stack-icon-line"></div>
+      <div class="stack-icon-line"></div>
+    </div>
+    <div class="stack-container" id="stack-container">
+      <div class="status-window" id="status-window">
+        <div class="status-indicator"></div>
+        <div class="status-text" id="status-text">
+          <div class="empty-status">No active task</div>
+        </div>
+      </div>
+      <div class="stack-header">
+        <div>
+          Stack <span class="task-count" id="task-count">0</span>
+        </div>
+        <button class="pop-button" id="pop-button" disabled>Pop</button>
+      </div>
+      <div class="notes-container"></div>
+    </div>
+  </div>
+  <script src="stack.js"></script>
+</body>
+</html> 
