@@ -275,12 +275,20 @@ function updateStackDisplay() {
   }
   
   // Get the top 3 notes of the stack (most recent)
+  // We're getting the last 3 items from the allNotes array which now maintains the order set by drag and drop
   const notesToShow = allNotes.slice(-3)
+  
+  // Log the notes we're about to show for debugging
+  console.log('Notes to display:', notesToShow.map((n, i) => ({
+    index: allNotes.indexOf(n),
+    content: n.content.substring(0, 20)
+  })))
   
   // Stack should grow downward, with newest at top
   // Iterate to display newest at top, oldest at bottom
   for (let i = notesToShow.length - 1; i >= 0; i--) {
     const noteObj = notesToShow[i]
+    const absoluteIndex = allNotes.indexOf(noteObj) // Get the actual index in allNotes array
     
     // Create a fresh note element (don't clone) to ensure proper styling
     const noteElement = document.createElement('div')
@@ -293,6 +301,25 @@ function updateStackDisplay() {
     if (i > 0) {
       noteElement.style.marginBottom = '-5px'
     }
+    
+    // Store the absolute index in the allNotes array for drag-and-drop
+    // This is crucial for the drag-and-drop to work with the current order
+    noteElement.dataset.noteIndex = absoluteIndex
+    
+    // Set draggable attribute and add drag event listeners
+    noteElement.draggable = true
+    noteElement.addEventListener('dragstart', handleDragStart)
+    noteElement.addEventListener('dragover', handleDragOver)
+    noteElement.addEventListener('dragenter', handleDragEnter)
+    noteElement.addEventListener('dragleave', handleDragLeave)
+    noteElement.addEventListener('drop', handleDrop)
+    noteElement.addEventListener('dragend', handleDragEnd)
+    
+    // Add a drag handle visual indicator
+    const dragHandle = document.createElement('div')
+    dragHandle.className = 'drag-handle'
+    dragHandle.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24"><path fill="currentColor" d="M3,15H21V13H3V15M3,19H21V17H3V19M3,11H21V9H3V11M3,5V7H21V5H3Z" /></svg>'
+    noteElement.appendChild(dragHandle)
     
     // Add content based on type
     if (noteObj.type === 'text') {
@@ -514,4 +541,290 @@ window.addEventListener('resize', () => {
     const targetWidth = Math.min(300, screenWidth * 0.9)
     stackWrapper.style.width = `${targetWidth}px`
   }
-}); 
+});
+
+// Add drag-and-drop functionality
+let draggedElement = null;
+let dragSourceIndex = -1;
+let dragTargetIndex = -1;
+let dropIndicators = [];
+
+// Function to create drop indicators between notes
+function createDropIndicators() {
+  // First clear any existing indicators
+  dropIndicators.forEach(indicator => {
+    if (indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator);
+    }
+  });
+  dropIndicators = [];
+
+  // Get the notes container
+  const notesContainer = document.querySelector('.notes-container');
+  const notes = notesContainer.querySelectorAll('.note');
+
+  // Create a drop indicator at the top (for dropping as first item)
+  const topIndicator = document.createElement('div');
+  topIndicator.className = 'drop-indicator';
+  topIndicator.dataset.position = 'top';
+  notesContainer.insertBefore(topIndicator, notesContainer.firstChild);
+  dropIndicators.push(topIndicator);
+
+  // Create indicators between notes
+  notes.forEach((note, i) => {
+    if (i < notes.length - 1) {
+      const indicator = document.createElement('div');
+      indicator.className = 'drop-indicator';
+      indicator.dataset.position = i.toString();
+      
+      // Insert after the current note
+      if (note.nextSibling) {
+        notesContainer.insertBefore(indicator, note.nextSibling);
+      } else {
+        notesContainer.appendChild(indicator);
+      }
+      
+      dropIndicators.push(indicator);
+    }
+  });
+
+  // Create a drop indicator at the bottom (for dropping as last item)
+  const bottomIndicator = document.createElement('div');
+  bottomIndicator.className = 'drop-indicator';
+  bottomIndicator.dataset.position = 'bottom';
+  notesContainer.appendChild(bottomIndicator);
+  dropIndicators.push(bottomIndicator);
+
+  // Add event listeners to drop indicators
+  dropIndicators.forEach(indicator => {
+    indicator.addEventListener('dragover', handleDropIndicatorDragOver);
+    indicator.addEventListener('dragleave', handleDropIndicatorDragLeave);
+    indicator.addEventListener('drop', handleDropIndicatorDrop);
+  });
+}
+
+// Handle drag start
+function handleDragStart(e) {
+  // Prevent drag if there's only one note
+  if (allNotes.length <= 1) {
+    e.preventDefault();
+    return false;
+  }
+
+  // Provide haptic feedback when starting drag
+  simulateHapticFeedback();
+  
+  // Store the dragged element and its original index
+  draggedElement = this;
+  dragSourceIndex = parseInt(this.dataset.noteIndex);
+  
+  // Set data transfer properties
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragSourceIndex.toString());
+  
+  // Add a dragging class for visual feedback
+  this.classList.add('dragging');
+  
+  // Make the element semi-transparent while dragging
+  setTimeout(() => {
+    this.style.opacity = '0.65';
+  }, 0);
+  
+  // Create drop indicators
+  createDropIndicators();
+  
+  return true;
+}
+
+// Handle drag over another element
+function handleDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault(); // Necessary to allow dropping
+  }
+  
+  if (draggedElement !== this) {
+    this.classList.add('drag-over');
+  }
+  
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+// Handle drag over a drop indicator
+function handleDropIndicatorDragOver(e) {
+  if (e.preventDefault) {
+    e.preventDefault();
+  }
+  
+  this.classList.add('active');
+  e.dataTransfer.dropEffect = 'move';
+  return false;
+}
+
+// Handle drag leave from drop indicator
+function handleDropIndicatorDragLeave(e) {
+  this.classList.remove('active');
+}
+
+// Handle drag enter event
+function handleDragEnter(e) {
+  if (draggedElement !== this) {
+    this.classList.add('drag-over');
+  }
+}
+
+// Handle drag leave event
+function handleDragLeave(e) {
+  this.classList.remove('drag-over');
+}
+
+// Handle drop on a drop indicator
+function handleDropIndicatorDrop(e) {
+  e.stopPropagation();
+  
+  // Get position from the indicator's data attribute
+  const position = this.dataset.position;
+  
+  if (!draggedElement || dragSourceIndex === -1) {
+    return false;
+  }
+  
+  // Get the note that needs to be moved
+  const noteToMove = allNotes[dragSourceIndex];
+  
+  // Calculate insert position based on indicator position
+  let insertPosition;
+  
+  if (position === 'top') {
+    insertPosition = 0;
+  } else if (position === 'bottom') {
+    insertPosition = allNotes.length - 1;
+  } else {
+    insertPosition = parseInt(position) + 1; // +1 because we want to insert after this note
+  }
+  
+  // Safety check
+  if (insertPosition < 0) insertPosition = 0;
+  if (insertPosition >= allNotes.length) insertPosition = allNotes.length - 1;
+  
+  // Don't do anything if source and target are the same
+  if (insertPosition === dragSourceIndex) {
+    resetDragState();
+    return false;
+  }
+  
+  // Remove the note from its original position
+  allNotes.splice(dragSourceIndex, 1);
+  
+  // Adjust insert position if it's after the source index
+  if (dragSourceIndex < insertPosition) {
+    insertPosition--;
+  }
+  
+  // Insert the note at the new position
+  allNotes.splice(insertPosition, 0, noteToMove);
+  
+  // Provide haptic feedback
+  simulateHapticFeedback();
+  
+  // Log the new order for debugging
+  console.log('New note order:', allNotes.map(n => n.content.substring(0, 20)));
+  
+  // Update the display
+  updateStackDisplay();
+  
+  // Send the updated order to main
+  ipcRenderer.send('update-notes-order', allNotes.map(note => ({
+    content: note.content,
+    type: note.type,
+    timestamp: note.timestamp
+  })));
+  
+  resetDragState();
+  return false;
+}
+
+// Handle drop event
+function handleDrop(e) {
+  e.stopPropagation(); // Stop browser from redirecting
+  
+  // Only process if we're not dropping on the same element
+  if (draggedElement === this) {
+    return false;
+  }
+  
+  // Get the target index from the full allNotes array
+  dragTargetIndex = parseInt(this.dataset.noteIndex);
+  
+  // Debug the operation
+  console.log('Reordering note:', { 
+    sourceIndex: dragSourceIndex, 
+    targetIndex: dragTargetIndex,
+    allNotesLength: allNotes.length
+  });
+  
+  // Store the note that needs to be moved
+  const noteToMove = allNotes[dragSourceIndex];
+  
+  // Safety check to ensure we have valid indices
+  if (!noteToMove || dragSourceIndex < 0 || dragTargetIndex < 0 || 
+      dragSourceIndex >= allNotes.length || dragTargetIndex >= allNotes.length) {
+    console.error('Invalid drag indices:', { dragSourceIndex, dragTargetIndex, allNotesLength: allNotes.length });
+    resetDragState();
+    return false;
+  }
+  
+  // Remove from original position
+  allNotes.splice(dragSourceIndex, 1);
+  
+  // Insert directly at target position (handles both up and down cases)
+  allNotes.splice(dragTargetIndex, 0, noteToMove);
+  
+  // Provide haptic feedback for successful drop
+  simulateHapticFeedback();
+  
+  // Update the stack display to reflect the new order
+  updateStackDisplay();
+  
+  // Send updated note order to main process to persist if needed
+  ipcRenderer.send('update-notes-order', allNotes.map(note => ({
+    content: note.content,
+    type: note.type,
+    timestamp: note.timestamp
+  })));
+  
+  resetDragState();
+  return false;
+}
+
+// Handle drag end event
+function handleDragEnd(e) {
+  resetDragState();
+}
+
+// Clean up drag state
+function resetDragState() {
+  // Remove the dragging visual effects from the dragged element
+  if (draggedElement) {
+    draggedElement.style.opacity = '1';
+    draggedElement.classList.remove('dragging');
+  }
+  
+  // Remove drag-over class from all notes
+  document.querySelectorAll('.note').forEach(note => {
+    note.classList.remove('drag-over');
+  });
+  
+  // Remove drop indicators
+  dropIndicators.forEach(indicator => {
+    if (indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator);
+    }
+  });
+  dropIndicators = [];
+  
+  // Reset the drag state variables
+  draggedElement = null;
+  dragSourceIndex = -1;
+  dragTargetIndex = -1;
+} 

@@ -2,9 +2,11 @@ const { app, BrowserWindow, ipcMain, globalShortcut, screen, Menu, MenuItem, web
 const path = require("path")
 const os = require("os")
 
+let mainWindow = null
 let stickyNote = null
 let stackWindow = null
-let statusWindow
+let splashWindow = null
+let stackNotes = [] // Array to hold stack notes with their order
 
 // iOS system colors
 const colors = {
@@ -668,4 +670,14 @@ ipcMain.on("show-sticky-note", () => {
   console.log("Received show-sticky-note request from renderer");
   showStickyNote();
 });
+
+// Handle order updates from stack drag and drop
+ipcMain.on("update-notes-order", (event, updatedNotes) => {
+  console.log("Received updated notes order")
+  // Store the updated order in global state
+  stackNotes = updatedNotes
+  
+  // If we need to persist this to storage, we could do that here
+  // For example, saving to a local file or database
+})
 

@@ -630,16 +630,61 @@ input[type="file"] {
   max-height: 150px;
   overflow: hidden;
   flex-shrink: 0;
+  cursor: grab; /* Add grab cursor for drag-and-drop */
+}
+
+/* Drag and drop styles */
+.note.dragging {
+  cursor: grabbing;
+  z-index: 1000 !important;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  opacity: 0.5;
+}
+
+.note.drag-over {
+  transform: translateY(5px) !important;
+  box-shadow: 0 -2px 0 rgba(0, 120, 255, 0.5);
+}
+
+.drag-handle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.3);
+  background: rgba(240, 240, 240, 0.6);
+  border-radius: 3px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  cursor: grab;
+}
+
+.note:hover .drag-handle {
+  opacity: 1;
+}
+
+.note .drag-handle:hover {
+  background: rgba(230, 230, 230, 0.9);
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.note.dragging .drag-handle {
+  opacity: 0;
+}
+
+/* Ensure the hover effect for non-dragging notes works properly */
+.note:hover:not(.dragging):not(.drag-over) {
+  transform: scale(1.01);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 .note.expanded {
   max-height: 500px;
   transition: max-height 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-.note:hover {
-  transform: scale(1.01);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04), 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 .note-content {
