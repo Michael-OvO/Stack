@@ -516,11 +516,11 @@ input[type="file"] {
   padding: 12px;
   overflow-y: auto;
   height: calc(100% - 24px);
-  width: calc(100% - 44px);
+  width: calc(100% - 60px);
   box-sizing: border-box;
   opacity: 0; /* Start hidden by default */
   transition: opacity 0.3s ease;
-  margin-left: 20px;
+  margin-left: 44px;
   -webkit-app-region: no-drag;
   z-index: 100;
   overflow-x: hidden;
@@ -574,9 +574,10 @@ input[type="file"] {
   opacity: 1 !important;
 }
 
+/* Stack icon (hamburger menu) */
 .stack-icon {
   position: absolute;
-  left: 15px;
+  left: 14px;
   top: 20px;
   width: 16px;
   height: 16px;

@@ -59,7 +59,7 @@ function createStickyNote() {
   stickyNote.savingInProgress = false;
   
   // Load the HTML file
-  stickyNote.loadFile("sticky-note.html")
+  stickyNote.loadFile("src/renderer/sticky-note/sticky-note.html")
   
   // Comment out automatic DevTools opening
   // stickyNote.webContents.openDevTools({ mode: 'detach' })
@@ -264,7 +264,7 @@ function createStackWindow() {
     show: false, // Don't show until ready
   })
 
-  stackWindow.loadFile("stack.html")
+  stackWindow.loadFile("src/renderer/stack/stack.html")
   
   // Comment out automatic DevTools opening
   // stackWindow.webContents.openDevTools({ mode: 'detach' })
